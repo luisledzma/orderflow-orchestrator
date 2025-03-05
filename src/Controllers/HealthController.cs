@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace orderflow.orchestrator.Controllers;
@@ -5,7 +6,8 @@ namespace orderflow.orchestrator.Controllers;
 /// This controller provides health checks for this microservice.
 /// </summary>
 [ApiController]
-[Route("[controller]")]
+[Route("api/v{version:apiVersion}/orchestrator/health")]
+[ApiVersion("1.0")]
 public class HealthController : ControllerBase
 {
     #region Constructor
@@ -23,6 +25,7 @@ public class HealthController : ControllerBase
     /// <returns>A 200 OK, indicating the microservice is healthy.</returns>
     /// <response code="200">Successful operation.</response>
     [HttpGet("GetStatus")]
+    [Authorize(Roles = "Admin")] // 🔐 This requires JWT authentication
     public IActionResult GetStatus()
     {
         return Ok(new { status = "Orchestrator Healthy", timestamp = DateTime.UtcNow });
