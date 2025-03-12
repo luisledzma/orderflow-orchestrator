@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using orderflow.orchestrator.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new ArgumentNullExc
 
 // Add services
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddApiVersioning(options =>
 {
     options.ReportApiVersions = true;
@@ -65,6 +67,7 @@ builder.Services.AddAuthorization(); // Enables authorization
 builder.WebHost.UseUrls("http://0.0.0.0:5051"); // Orchestrator Service runs on port 5052
 
 var app = builder.Build();
+app.UseMiddleware<LoggingMiddleware>();
 
 // Enable routing
 app.UseRouting();
