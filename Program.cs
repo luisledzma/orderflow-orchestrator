@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using orderflow.orchestrator.Middleware;
+using orderflow.orchestrator.Data;
+using Microsoft.EntityFrameworkCore;
+using orderflow.orchestrator.Repository;
+using orderflow.orchestrator.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +31,9 @@ builder.Services.AddApiVersioning(options =>
     options.DefaultApiVersion = new ApiVersion(1, 0);
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
+
+builder.Services.AddDbContext<OrderFlowDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add JWT authentication
 builder.Services
@@ -61,6 +68,10 @@ builder.Services
         };
 
     });
+
+// Register your services
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 builder.Services.AddAuthorization(); // Enables authorization
 
