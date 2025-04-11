@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using orderflow.orchestrator.Models;
 using orderflow.orchestrator.Services;
-using System.Threading.Tasks;
 
 namespace orderflow.orchestrator.Controllers;
 
@@ -28,12 +27,12 @@ public class OrderController : ControllerBase
     /// Creates a new order.
     /// </summary>
     /// <param name="entity">The order to create.</param>
-    /// <returns>A 201 Created response with the created order.</returns>
+    /// <returns>A 200 Ok response with the created order.</returns>
     [HttpPost("create")]
     [Authorize(Roles = "Admin")] // 🔐 This requires JWT authentication
-    [ProducesResponseType(typeof(OrderModel), 201)]
+    [ProducesResponseType(typeof(OrderModel), 200)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> AddProduct([FromBody] OrderModel entity)
+    public async Task<IActionResult> AddOrder([FromBody] OrderModel entity)
     {
         if (!ModelState.IsValid)
         {
@@ -41,6 +40,58 @@ public class OrderController : ControllerBase
         }
 
         var createdOrder = await _orderService.AddOrderAsync(entity);
-        return CreatedAtAction(nameof(AddProduct), new { id = createdOrder.Id }, createdOrder);
+        //return CreatedAtAction(nameof(AddOrder), new { id = createdOrder.Id }, createdOrder);
+        return Ok(createdOrder);
     }
+
+    /// <summary>
+    /// Partially updates an existing order.
+    /// </summary>
+    /// <param name="id">The ID of the order to update.</param>
+    /// <param name="updatedFields">The fields to update.</param>
+    /// <returns>A 200 OK with the updated order, or 404 if not found.</returns>
+    [HttpPatch("update/{id}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(OrderModel), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateOrder(int id, [FromBody] OrderModel updatedFields)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var updatedOrder = await _orderService.UpdateOrderAsync(id, updatedFields);
+
+        if (updatedOrder == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(updatedOrder);
+    }
+
+    /// <summary>
+    /// Deletes an existing order.
+    /// </summary>
+    /// <param name="id">The ID of the order to delete.</param>
+    /// <returns>A 200 Ok if the order was deleted, or 404 if not found.</returns>
+    [HttpDelete("delete/{id}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeleteOrder(int id)
+    {
+        var success = await _orderService.DeleteOrderAsync(id);
+
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return Ok();
+    }
+
+
 }
